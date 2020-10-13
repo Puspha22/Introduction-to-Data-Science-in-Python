@@ -1,0 +1,177 @@
+Question 1
+
+def answer_one():
+    import pandas as pd
+    import numpy as np
+
+    x = pd.ExcelFile('assets/Energy Indicators.xls')
+    energy = x.parse(skiprows=17,skip_footer=(38))
+    energy = energy[['Unnamed: 1','Petajoules','Gigajoules','%']]
+    energy.columns = ['Country', 'Energy Supply', 'Energy Supply per Capita', '% Renewable']
+    energy[['Energy Supply', 'Energy Supply per Capita', '% Renewable']] =  energy[['Energy Supply', 'Energy Supply per Capita', '% Renewable']].replace('...',np.NaN).apply(pd.to_numeric)
+    energy['Energy Supply'] = energy['Energy Supply']*1000000
+    energy['Country'] = energy['Country'].replace({'China, Hong Kong Special Administrative Region':'Hong Kong','United Kingdom of Great Britain and Northern Ireland':'United Kingdom','Republic of Korea':'South Korea','United States of America':'United States','Iran (Islamic Republic of)':'Iran'})
+    energy['Country'] = energy['Country'].str.replace(r" \(.*\)","")
+    
+    GDP = pd.read_csv('assets/world_bank.csv',skiprows=4)
+    GDP['Country Name'] = GDP['Country Name'].replace('Korea, Rep.','South Korea')
+    GDP['Country Name'] = GDP['Country Name'].replace('Iran, Islamic Rep.','Iran')
+    GDP['Country Name'] = GDP['Country Name'].replace('Hong Kong SAR, China','Hong Kong')
+    GDP = GDP[['Country Name','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015']]
+    GDP.columns = ['Country','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015']
+
+    ScimEn = pd.read_excel(io='assets/scimagojr-3.xlsx')
+    ScimEn_m = ScimEn[:15]
+    
+    df = pd.merge(ScimEn_m,energy,how='inner',left_on='Country',right_on='Country')
+    final_df = pd.merge(df,GDP,how='inner',left_on='Country',right_on='Country')
+    final_df = final_df.set_index('Country')
+    
+    return final_df
+
+---------------------------------------------------------------------------------------------------------------------------
+Question 2
+
+def answer_two():
+    return 156
+
+---------------------------------------------------------------------------------------------------------------------------
+Question 3
+
+def answer_three():
+    Top15 = answer_one()
+    avgGDP = Top15[['2006','2007','2008','2009','2010','2011','2012','2013','2014','2015']].mean(axis=1).rename('avgGDP').sort_values(ascending=False)
+    return avgGDP
+
+---------------------------------------------------------------------------------------------------------------------------
+Question 4
+
+def answer_four():
+    import pandas as pd
+    Top15 = answer_one()
+    ans = Top15[Top15['Rank'] == 4]['2015'] - Top15[Top15['Rank'] == 4]['2006']
+    return pd.to_numeric(ans)[0]
+
+---------------------------------------------------------------------------------------------------------------------------
+Question 5
+
+def answer_five():
+    Top15 = answer_one()
+    ans = Top15['Energy Supply per Capita'].mean()
+    return ans
+
+---------------------------------------------------------------------------------------------------------------------------
+Question 6
+
+def answer_six():
+    Top15 = answer_one()
+    ans = Top15[Top15['% Renewable'] == max(Top15['% Renewable'])]
+    return (ans.index.tolist()[0],ans['% Renewable'].tolist()[0])
+
+---------------------------------------------------------------------------------------------------------------------------
+Question 7
+
+def answer_seven():
+    Top15 = answer_one()
+    Top15['Citation Ratio'] = Top15['Self-citations']/Top15['Citations']
+    ans = Top15[Top15['Citation Ratio'] == max(Top15['Citation Ratio'])]
+    return (ans.index.tolist()[0],ans['Citation Ratio'].tolist()[0])
+
+---------------------------------------------------------------------------------------------------------------------------
+Question 8
+
+def answer_eight():
+    Top15 = answer_one()
+    Top15['Population'] = Top15['Energy Supply']/Top15['Energy Supply per Capita']
+    Top15['Population'] = Top15['Population'].sort_values(ascending=False)
+    return 'United States'
+
+---------------------------------------------------------------------------------------------------------------------------
+Question 9
+
+def answer_nine():
+    Top15 = answer_one()
+    Top15['PopEst'] = Top15['Energy Supply'] / Top15['Energy Supply per Capita']
+    Top15['Citable docs per Capita'] = Top15['Citable documents'] / Top15['PopEst']
+    ans = Top15['Citable docs per Capita'].corr(Top15['Energy Supply per Capita'])
+    return ans
+
+---------------------------------------------------------------------------------------------------------------------------
+Question 10
+
+def answer_ten():
+    Top15 = answer_one()
+    Top15['HighRenew'] = [1 if x >= Top15['% Renewable'].median() else 0 for x in Top15['% Renewable']]
+    return (Top15['HighRenew'])
+
+---------------------------------------------------------------------------------------------------------------------------
+Question 11
+
+def answer_eleven():
+    import pandas as pd
+    import numpy as np
+    ContinentDict  = {'China':'Asia', 
+                  'United States':'North America', 
+                  'Japan':'Asia', 
+                  'United Kingdom':'Europe', 
+                  'Russian Federation':'Europe', 
+                  'Canada':'North America', 
+                  'Germany':'Europe', 
+                  'India':'Asia',
+                  'France':'Europe', 
+                  'South Korea':'Asia', 
+                  'Italy':'Europe', 
+                  'Spain':'Europe', 
+                  'Iran':'Asia',
+                  'Australia':'Australia', 
+                  'Brazil':'South America'}
+    Top15 = answer_one()
+    Top15['PopEst'] = (Top15['Energy Supply'] / Top15['Energy Supply per Capita']).astype(float)
+    Top15 = Top15.reset_index()
+    Top15['Continent'] = [ContinentDict[country] for country in Top15['Country']]
+    ans = Top15.set_index('Continent').groupby(level=0)['PopEst'].agg({'size': np.size, 'sum': np.sum, 'mean': np.mean,'std': np.std})
+    ans = ans[['size', 'sum', 'mean', 'std']]
+    return ans
+
+---------------------------------------------------------------------------------------------------------------------------
+Question 12
+
+def answer_twelve():
+    import pandas as pd
+    import numpy as np
+    Top15 = answer_one()
+    ContinentDict  = {'China':'Asia', 
+                  'United States':'North America', 
+                  'Japan':'Asia', 
+                  'United Kingdom':'Europe', 
+                  'Russian Federation':'Europe', 
+                  'Canada':'North America', 
+                  'Germany':'Europe', 
+                  'India':'Asia',
+                  'France':'Europe', 
+                  'South Korea':'Asia', 
+                  'Italy':'Europe', 
+                  'Spain':'Europe', 
+                  'Iran':'Asia',
+                  'Australia':'Australia', 
+                  'Brazil':'South America'}
+    Top15 = Top15.reset_index()
+    Top15['Continent'] = [ContinentDict[country] for country in Top15['Country']]
+    Top15['bins'] = pd.cut(Top15['% Renewable'],5)
+    return (Top15.groupby(['Continent','bins']).size())
+
+
+---------------------------------------------------------------------------------------------------------------------------
+Question 13
+
+def answer_thirteen():
+    import locale
+    import pandas as pd
+    locale.setlocale(locale.LC_ALL, 'en_US.utf8')
+    Top15 = answer_one()
+    Top15['PopEst'] = (Top15['Energy Supply'] / Top15['Energy Supply per Capita']).astype(float)
+    map_str = []
+    for num in Top15['PopEst']:
+        map_str.append(locale.format('%.2f',num,grouping=True))
+    Top15['PopEst_str'] = map_str
+    return (Top15['PopEst_str'])

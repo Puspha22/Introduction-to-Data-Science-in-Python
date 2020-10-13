@@ -1,0 +1,44 @@
+Part A
+
+import re
+def names():
+    simple_string = """Amy is 5 years old, and her sister Mary is 2 years old. 
+    Ruth and Peter, their parents, have 3 kids."""
+    pattern="Amy|Mary|Ruth|Peter"
+
+    return(re.findall(pattern,simple_string))
+
+
+Part B
+
+import re
+def grades():
+    with open ("assets/grades.txt", "r") as file:
+        grades = file.read()
+
+    lst=list()
+    pattern="([\w ]*):\sB"
+    for title in re.findall(pattern,grades):
+        lst.append(title)
+    return(lst)
+
+
+Part C
+
+import re
+
+regex = re.compile(
+    r'(?P<host>(?:\d+\.){3}\d+)\s+-\s+'
+    r'(?P<user_name>[a-zA-Z0-9-]*)\s+'
+    r'\[(?P<time>[-\w\s:/]+)\]\s+'
+    r'"(?P<request>.*)"'
+)
+
+def logs():
+    data = []
+    with open("assets/logdata.txt", "r") as f:
+        logdata = f.read()
+    for m in regex.finditer(logdata):
+        d = m.groupdict()
+        data.append(d)
+    return data
