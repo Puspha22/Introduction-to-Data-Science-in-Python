@@ -1,0 +1,40 @@
+Introducton to data science in python
+__________________________________________________________________________________
+
+COURSE 1
+
+Week 1
+
+Lecture_1 Numpy:
+
+Array Creation
+Array Operations (loading images and converting them into array)
+Indexing, Slicing and Iterating
+Trying Numpy with Datasets
+
+Lecture_2 Regex:
+
+Use of match() and search()
+Patterns and Character Classes (finadall())
+Quantifiers (findall())
+Groups (findall(), finditer())
+Look ahead and look behind
+Examples
+
+
+Week 2
+
+Lecture_1 The series data structure:
+
+Create a series from list and dictionaries
+How indices on data work
+The way that pandas typecasts data including missing values
+
+Lecture_2 Querying a Series:
+
+__________________________________________________________________________________
+
+COURSE 2
+
+
+
